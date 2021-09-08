@@ -1,9 +1,10 @@
 const mergeImages = require('merge-images');
-const { readdir, writeFile } = require('fs/promises');
+const { readdir, unlink, writeFile } = require('fs/promises');
 const { Canvas, Image } = require('canvas');
 const { v4: uuid4 } = require('uuid');
 
 const ATTRIBUTE_CLASSES = ['attr1', 'attr2', 'attr3']
+const ART_DIR = './art'
 
 const getRandomImage = attribute => {
     const attributeDir = `./images/${attribute}`
@@ -16,7 +17,7 @@ function makeArt(attributes, filename) {
         Canvas: Canvas,
         Image: Image
       })
-    .then(b64 => writeFile(`art/${filename}.png`, b64.split(';base64,').pop(), {encoding: 'base64'}));
+    .then(b64 => writeFile(`${ART_DIR}/${filename}.png`, b64.split(';base64,').pop(), {encoding: 'base64'}));
 }
 
 function* sequence() {
@@ -28,16 +29,17 @@ function* sequence() {
 }
 
 function sleep(ms = 1000) {
-    console.log('o tu')
     return new Promise((resolve) => {
       setTimeout(resolve, ms);
     });
   }
 
-console.log('co jest')
 
-
+function clearArt() {
+    return readdir(ART_DIR).then(files => files.map(path => `${ART_DIR}/${path}`).map(unlink))
+}
 async function main() {
+    await clearArt()
     for (const ndx of sequence()) {
         await Promise
             .all(ATTRIBUTE_CLASSES.map(getRandomImage))
@@ -47,15 +49,3 @@ async function main() {
 }
 
 main()
-
-// for (const ndx of sequence()) {
-    // console.log(ndx)
-    const result = Promise
-    .all(ATTRIBUTE_CLASSES.map(getRandomImage))
-    .then(attributes => makeArt(attributes, 1))
-    // .then(sleep)
-    // .then(() => console.log('done'))
-// }
-// const result = Promise
-//     .all(ATTRIBUTE_CLASSES.map(getRandomImage))
-//     .then(attributes => makeArt(attributes, 1))
