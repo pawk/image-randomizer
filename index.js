@@ -3,11 +3,20 @@ const { readdir, unlink, writeFile } = require('fs/promises');
 const { Canvas, Image } = require('canvas');
 const { v4: uuid4 } = require('uuid');
 
-const ATTRIBUTE_CLASSES = ['attr1', 'attr2', 'attr3']
+
+// where you want your art to be saved
 const ART_DIR = './art'
+// how many art you want to generate
+const ART_COUNT = 10
+// classes will be translated to directory paths of $ATTRIBUTE_DIR/$ATTRIBUTE_CLASS, i.e.: ./images/attr1
+const ATTRIBUTE_CLASSES = ['attr1', 'attr4', 'attr3']
+// directory where you hold ATTRIBUTE_CLASSES directories
+const ATTRIBUTE_DIR = './images'
+// number of milliseconds between art generations
+const DELAY = 1000
 
 const getRandomImage = attribute => {
-    const attributeDir = `./images/${attribute}`
+    const attributeDir = `${ATTRIBUTE_DIR}/${attribute}`
     return readdir(attributeDir)
         .then(items => `${attributeDir}/${items[Math.floor(Math.random()*items.length)]}`)
 }
@@ -17,7 +26,7 @@ function makeArt(attributes, filename) {
         Canvas: Canvas,
         Image: Image
       })
-    .then(b64 => writeFile(`${ART_DIR}/${filename}.png`, b64.split(';base64,').pop(), {encoding: 'base64'}));
+    .then(b64 => writeFile(`${ART_DIR}/${filename}.png`, b64.split(';base64,').pop(), {encoding: 'base64'}))
 }
 
 function* sequence() {
@@ -44,7 +53,11 @@ async function main() {
         await Promise
             .all(ATTRIBUTE_CLASSES.map(getRandomImage))
             .then(attributes => makeArt(attributes, ndx + 1))
-        await sleep()
+        await sleep(DELAY)
+
+        if (ART_COUNT && ndx == ART_COUNT) {
+            break
+        }
     }
 }
 
